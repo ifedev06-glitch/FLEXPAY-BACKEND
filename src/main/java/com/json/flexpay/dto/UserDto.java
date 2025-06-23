@@ -1,14 +1,11 @@
 package com.json.flexpay.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.json.flexpay.entity.User;
+import lombok.*;
 
 import java.util.Date;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDto {
@@ -26,4 +23,13 @@ public class UserDto {
     private String password;
 
     private String gender;
+
+    public UserDto(User user) {
+        this.firstname = user.getFirstname();
+        this.lastname = user.getLastname();
+        this.username = user.getUsername();
+        this.dob = user.getDob();
+        this.tel = user.getTel();
+        this.gender = user.getGender();
+    }
 }

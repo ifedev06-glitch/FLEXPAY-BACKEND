@@ -1,26 +1,23 @@
 package com.json.flexpay.helper;
 
 
-import com.json.flexpay.dto.AccountDto;
-import com.json.flexpay.dto.ConvertDto;
+import com.json.flexpay.dto.AccountResponse;
 import com.json.flexpay.entity.Account;
 import com.json.flexpay.entity.Transaction;
 import com.json.flexpay.entity.Type;
 import com.json.flexpay.entity.User;
 import com.json.flexpay.exceptions.InsufficientFundsException;
-import com.json.flexpay.exceptions.UnauthorizedOperationException;
 import com.json.flexpay.repository.AccountRepository;
 import com.json.flexpay.service.ExchangeRateService;
 import com.json.flexpay.service.TransactionService;
 import com.json.flexpay.util.RandomUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +30,7 @@ import java.util.Optional;
 public class AccountHelper {
 
     private final AccountRepository accountRepository;
-    private final TransactionService transactionService;
+    private final @Lazy TransactionService transactionService;
     private final ExchangeRateService exchangeRateService;
 
     private final Map<String, String> CURRENCIES = Map.of(
@@ -45,9 +42,11 @@ public class AccountHelper {
             "INR", "Indian Rupee"
     );
 
-    public Account createAccount(AccountDto accountDto, User user) throws Exception {
+    public Account createAccount(User user) throws Exception {
         long accountNumber;
-            validateAccountNonExistsForUser(accountDto.getCode(), user.getUid());
+        String defaultCode = "NGN";
+        char defaultSymbol = '₦';
+            validateAccountNonExistsForUser(defaultCode, user.getUid());
         do{
             accountNumber = new RandomUtil().generateRandom(10);
         } while(accountRepository.existsByAccountNumber(accountNumber));
@@ -57,11 +56,12 @@ public class AccountHelper {
                 .accountName(user.getFirstname() + " " + user.getLastname())
                 .balance(1000)
                 .owner(user)
-                .code(accountDto.getCode())
-                .symbol(accountDto.getSymbol())
-                .label(CURRENCIES.get(accountDto.getCode()))
+                .code(defaultCode)
+                .symbol(defaultSymbol)
+                .label(CURRENCIES.get(defaultCode))
                 .build();
-        return accountRepository.save(account);
+        Account savedUser = accountRepository.save(account);
+        return savedUser;
     }
 
 
@@ -74,14 +74,39 @@ public class AccountHelper {
 
     public Transaction performTransfer(Account senderAccount, Account receiverAccount, double amount, User user) throws Exception {
         validateSufficientFunds(senderAccount, (amount * 1.01));
+
         senderAccount.setBalance(senderAccount.getBalance() - amount * 1.01);
         receiverAccount.setBalance(receiverAccount.getBalance() + amount);
+
         accountRepository.saveAll(List.of(senderAccount, receiverAccount));
-        var senderTransaction = transactionService.createAccountTransaction(amount, Type.WITHDRAW, amount * 0.01, user, senderAccount);
-        var receiverTransaction = transactionService.createAccountTransaction(amount, Type.DEPOSIT, 0.00, receiverAccount.getOwner(), receiverAccount);
+
+        // Create sender transaction
+        var senderTransaction = transactionService.createAccountTransaction(
+                amount,
+                Type.WITHDRAW,
+                amount * 0.01,
+                user,
+                senderAccount,
+                senderAccount,
+                receiverAccount,
+                "Transfer to " + receiverAccount.getAccountName()
+        );
+
+        // Create receiver transaction
+        var receiverTransaction = transactionService.createAccountTransaction(
+                amount,
+                Type.DEPOSIT,
+                0.00,
+                receiverAccount.getOwner(),
+                receiverAccount,
+                senderAccount,
+                receiverAccount,
+                "Received from " + senderAccount.getAccountName()
+        );
 
         return senderTransaction;
-}
+    }
+
 
     private void validateSufficientFunds(Account account, double amount) {
         if(account.getBalance() < amount) {
@@ -96,5 +121,9 @@ public class AccountHelper {
 
     public Optional<Account> findByCodeAndOwnerUid(String code, String uid) {
         return accountRepository.findByCodeAndOwnerUid(code, uid);
+    }
+
+    public List<Account> getUserAccounts(String uid) {
+        return accountRepository.findAllByOwnerUid(uid);
     }
 }

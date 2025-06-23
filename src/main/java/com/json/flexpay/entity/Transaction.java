@@ -25,9 +25,15 @@ public class Transaction {
 
     private Double txFee;
 
-    private String sender;
+    @ManyToOne
+    @JoinColumn(name = "sender_id")
+    @JsonIgnore
+    private Account sender;
 
-    private String receiver;
+    @ManyToOne
+    @JoinColumn(name = "receiver_id")
+    @JsonIgnore
+    private Account receiver;
 
     private String description;
 

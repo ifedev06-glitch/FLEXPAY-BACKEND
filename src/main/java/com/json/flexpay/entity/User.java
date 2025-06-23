@@ -53,7 +53,10 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    private List<String> roles;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+   private List<String> roles;
 
     @OneToOne(mappedBy = "owner")
     @JsonIgnore
@@ -64,12 +67,17 @@ public class User implements UserDetails {
     private List<Transaction> transactions;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
+//    @JsonIgnore
     private List<Account> accounts;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
+
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }
 
