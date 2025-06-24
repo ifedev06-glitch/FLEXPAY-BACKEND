@@ -1,14 +1,10 @@
-# Use lightweight Java base image
-FROM openjdk:17-jdk-slim
-
-# Set working directory
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy the built jar file
-COPY target/*.jar FLEXPAY-0.0.1-SNAPSHOT.jar
-
-# Expose port (same as server.port in Spring Boot)
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/target/*.jar FLEXPAY-0.0.1-SNAPSHOT.jar
 EXPOSE 8085
-
-# Run the app
 ENTRYPOINT ["java", "-jar", "FLEXPAY-0.0.1-SNAPSHOT.jar"]
