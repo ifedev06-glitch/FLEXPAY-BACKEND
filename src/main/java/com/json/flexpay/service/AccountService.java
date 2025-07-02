@@ -8,6 +8,7 @@ import com.json.flexpay.entity.Account;
 import com.json.flexpay.entity.Transaction;
 import com.json.flexpay.entity.Type;
 import com.json.flexpay.entity.User;
+import com.json.flexpay.exceptions.BadRequestException;
 import com.json.flexpay.helper.AccountHelper;
 import com.json.flexpay.repository.AccountRepository;
 import jakarta.transaction.Transactional;
@@ -24,6 +25,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountHelper accountHelper;
     private final TransactionService transactionService;
+
     public List<Account> getUserAccounts(String uid) {
         return accountRepository.findAllByOwnerUid(uid);
     }
@@ -38,7 +40,7 @@ public class AccountService {
 
     public Transaction depositFunds(DepositRequest request, User user) throws Exception {
         Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(() -> new Exception("Account not found"));
+                .orElseThrow(() -> new BadRequestException("Account not found"));
 
         account.setBalance(account.getBalance() + request.getAmount());
         accountRepository.save(account);

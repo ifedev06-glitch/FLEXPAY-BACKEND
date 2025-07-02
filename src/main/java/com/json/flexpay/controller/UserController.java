@@ -1,5 +1,6 @@
 package com.json.flexpay.controller;
 
+import com.json.flexpay.dto.ApiResponse;
 import com.json.flexpay.dto.AuthRequest;
 import com.json.flexpay.dto.AuthResponse;
 import com.json.flexpay.dto.UserDto;
@@ -21,16 +22,16 @@ public class UserController {
     private final AccountHelper accountHelper;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody UserDto userDto) throws Exception {
-        return ResponseEntity.ok(userService.register(userDto));
+    public ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto userDto) {
+        ApiResponse<User> response = userService.register(userDto);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/auth")
-    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest request) {
-        AuthResponse response = userService.authenticateUser(request);
-
+    public ResponseEntity<ApiResponse<AuthResponse>> authenticateUser(@RequestBody AuthRequest request) {
+        ApiResponse<AuthResponse> response = userService.authenticateUser(request);
         return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + response.getToken())
+                .header("Authorization", "Bearer " + response.getData().getToken())
                 .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Authorization")
                 .body(response);
     }

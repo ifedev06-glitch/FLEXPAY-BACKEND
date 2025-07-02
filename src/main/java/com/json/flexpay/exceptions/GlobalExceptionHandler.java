@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     public ApiErrorResponse handleUnauthorizedException(AuthenticationException exception) {
         ApiErrorResponse errorResponse = new ApiErrorResponse();
         errorResponse.setStatus("ERROR");
-        errorResponse.setStatusCode("401");
+        errorResponse.setStatusCode("400");
         errorResponse.setMessage(exception.getMessage());
         return errorResponse;
     }
@@ -61,5 +61,15 @@ public class GlobalExceptionHandler {
         errorResponse.setMessage(exception.getMessage());
         return errorResponse;
     }
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiErrorResponse handleUserAlreadyExistsException(UserAlreadyExistsException exception) {
+        ApiErrorResponse errorResponse = new ApiErrorResponse();
+        errorResponse.setStatus("ERROR");
+        errorResponse.setStatusCode("409");
+        errorResponse.setMessage(exception.getMessage());
+        return errorResponse;
+    }
+
 }
 
