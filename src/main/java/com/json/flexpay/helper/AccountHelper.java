@@ -119,8 +119,8 @@ public class AccountHelper {
         return accountRepository.existsByCodeAndOwnerUid(code, uid);
     }
 
-    public Optional<Account> findByCodeAndOwnerUid(String code, String uid) {
-        return accountRepository.findByCodeAndOwnerUid(code, uid);
+    public Optional<Account> findByCodeAndOwnerUid( String uid) {
+        return accountRepository.findByOwnerUid( uid);
     }
 
     public List<Account> getUserAccounts(String uid) {

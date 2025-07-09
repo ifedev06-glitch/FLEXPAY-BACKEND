@@ -30,7 +30,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/register", "/auth/**").permitAll()
+                        .requestMatchers("/accounts/deposit").permitAll()
                         .requestMatchers("/accounts/transfer").authenticated()
+                        .requestMatchers("/accounts/withdraw").permitAll()
+                        .requestMatchers("/api/dashboard").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

@@ -9,6 +9,7 @@ import com.json.flexpay.entity.Transaction;
 import com.json.flexpay.entity.Type;
 import com.json.flexpay.entity.User;
 import com.json.flexpay.exceptions.BadRequestException;
+import com.json.flexpay.exceptions.UserAlreadyExistsException;
 import com.json.flexpay.helper.AccountHelper;
 import com.json.flexpay.repository.AccountRepository;
 import jakarta.transaction.Transactional;
@@ -31,16 +32,16 @@ public class AccountService {
     }
 
     public Transaction transferFunds(TransferDto transferDto, User user) throws Exception {
-        System.out.println("Currency Code: " + transferDto.getCode());
-        var senderAccount = accountRepository.findByCodeAndOwnerUid(transferDto.getCode(), user.getUid())
+        System.out.println("description: " + transferDto.getDescription());
+        var senderAccount = accountRepository.findByOwnerUid( user.getUid())
                 .orElseThrow(() -> new UnsupportedOperationException("Account of type currency do not exists for user"));
         var receiverAccount = accountRepository.findByAccountNumber(transferDto.getRecipientAccountNumber()).orElseThrow();
         return accountHelper.performTransfer(senderAccount, receiverAccount, transferDto.getAmount(), user);
     }
 
     public Transaction depositFunds(DepositRequest request, User user) throws Exception {
-        Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(() -> new BadRequestException("Account not found"));
+        Account account = accountRepository.findByAccountNumber(request.getRecipientAccountNumber())
+                .orElseThrow(() -> new UserAlreadyExistsException("Account not found"));
 
         account.setBalance(account.getBalance() + request.getAmount());
         accountRepository.save(account);

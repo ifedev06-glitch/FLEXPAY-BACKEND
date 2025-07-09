@@ -9,7 +9,7 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class DepositRequest {
 
-    private long accountNumber;
+    private long recipientAccountNumber;
     private double amount;
     private String description;
 
